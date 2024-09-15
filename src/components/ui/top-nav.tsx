@@ -18,6 +18,14 @@ import {
   DrawerTrigger,
 } from '@/components/ui/drawer';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   PlusIcon,
   LayoutList,
   LayoutGrid,
@@ -32,6 +40,8 @@ import { useFiltersContext } from '@/contexts/FiltersContext';
 import MultipleSelector from './multiple-select';
 import { useJerseysViewContext } from '@/contexts/JerseysViewContext';
 import { ViewMode } from '@/model/ui';
+import { useSessionContext } from '@/contexts/SessionContext';
+import { useNavigate } from '@tanstack/react-router';
 
 export function TopNav() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
@@ -71,10 +81,31 @@ export function TopNav() {
     document.documentElement.classList.toggle('dark', theme === 'dark');
   }, [theme]);
 
+  const { session, signOut } = useSessionContext();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    signOut();
+    navigate({ to: '/' });
+  };
+
   return (
     <div className="flex justify-between items-center mb-4">
       <h1 className="text-2xl font-bold">Football Jersey Collection</h1>
       <div className="flex space-x-2">
+        {session ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger>Open</DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuLabel>{session.user.email}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Profile</DropdownMenuItem>
+              <DropdownMenuItem>
+                <Button onClick={handleSignOut}>Logout</Button>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : null}
         <Button variant="outline" size="icon" onClick={toggleTheme}>
           {theme === 'dark' ? (
             <Sun className="h-4 w-4" />
@@ -175,13 +206,17 @@ export function TopNav() {
         </Button>
         <Dialog
           open={isFormOpen}
-          onOpenChange={() => {
-            setIsFormOpen(false);
-            setIsEditMode(false);
+          onOpenChange={(isOpen) => {
+            setIsFormOpen(isOpen);
           }}
         >
           <DialogTrigger asChild>
-            <Button onClick={() => setIsFormOpen(true)}>
+            <Button
+              onClick={() => {
+                setIsEditMode(false);
+                setIsFormOpen(true);
+              }}
+            >
               <PlusIcon className="mr-2 h-4 w-4" /> Add Jersey
             </Button>
           </DialogTrigger>

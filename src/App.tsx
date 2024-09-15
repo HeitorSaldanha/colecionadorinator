@@ -1,17 +1,14 @@
-import { useState } from 'react';
-import { JerseyCard } from './components/ui/jersey';
+import { PropsWithChildren, useState } from 'react';
 import { Ijersey, JerseyType } from './model/jersey';
-import { JerseyTable } from './components/ui/jersey-table';
 import { IFilters } from './model/filters';
 import {
   emptyFilters,
   FiltersContextProvider,
 } from './contexts/FiltersContext';
-import { TopNav } from './components/ui/top-nav';
 import { JerseysViewContextProvider } from './contexts/JerseysViewContext';
 import { ViewMode } from './model/ui';
 
-export default function JerseyDashboard() {
+export default function JerseyDashboard({ children }: PropsWithChildren) {
   const [jerseys, setJerseys] = useState<Ijersey[]>([
     {
       id: 1,
@@ -46,17 +43,12 @@ export default function JerseyDashboard() {
   const [selectedJersey, setSelectedJersey] = useState<Ijersey | null>(null);
   const [viewMode, setViewMode] = useState(ViewMode.GRID);
   const [filters, setFilters] = useState<IFilters>(emptyFilters);
-  const [filteredJerseys, setFilteredJerseys] = useState<Ijersey[]>(jerseys);
 
   const editJersey = (jersey: Ijersey) => {
     setJerseys(jerseys.map((j) => (j.id === jersey.id ? jersey : j)));
     setIsFormOpen(false);
     setIsEditMode(false);
     setSelectedJersey(null);
-  };
-
-  const handleDeleteJersey = (id: number) => {
-    setJerseys(jerseys.filter((jersey) => jersey.id !== id));
   };
 
   const updateFilters = (update: Partial<IFilters>) => {
@@ -86,20 +78,7 @@ export default function JerseyDashboard() {
         }}
       >
         <FiltersContextProvider value={{ filters, updateFilters }}>
-          <TopNav />
-          {viewMode ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredJerseys.map((jersey) => (
-                <JerseyCard
-                  jersey={jersey}
-                  variant="grid"
-                  onDelete={handleDeleteJersey}
-                />
-              ))}
-            </div>
-          ) : (
-            <JerseyTable jerseys={filteredJerseys} />
-          )}
+          {children}
         </FiltersContextProvider>
       </JerseysViewContextProvider>
     </div>
