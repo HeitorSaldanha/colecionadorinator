@@ -21,6 +21,7 @@
     "@supabase/supabase-js": "^2.45.4",
     "@tanstack/react-query": "^5.56.2",
     "@tanstack/react-router": "^1.57.15",
+    "@types/uuid": "^10.0.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "1.0.0",
@@ -29,6 +30,7 @@
     "react-dom": "^18.3.1",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
+    "uuid": "^10.0.0",
     "vaul": "^0.9.1"
   },
   "devDependencies": {

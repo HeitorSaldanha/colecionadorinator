@@ -6,7 +6,7 @@ export enum JerseyType {
 }
 
 export type Ijersey = {
-  id: number;
+  id: string;
   team: string;
   type: JerseyType;
   number: string;

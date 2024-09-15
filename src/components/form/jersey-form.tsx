@@ -1,11 +1,13 @@
-import { Ijersey } from '@/model/jersey';
+import { Ijersey, JerseyType } from '@/model/jersey';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
+import { useJerseysViewContext } from '@/contexts/JerseysViewContext';
+import { useUpdateJerseys } from '@/apis/UseCollections';
+import { v4 as uuidv4 } from 'uuid';
 
 export function JerseyForm({
-  onSubmit,
   initialData,
 }: {
   onSubmit: (jersey: Ijersey | Omit<Ijersey, 'id' | 'imageUrl'>) => void;
@@ -14,11 +16,29 @@ export function JerseyForm({
   const [formData, setFormData] = useState(
     initialData || { team: '', number: '', player: '', season: '' }
   );
+  const { isEditMode } = useJerseysViewContext();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(formData);
-  };
+  const { mutate: updateJerseys, isPending } = useUpdateJerseys();
+
+  const editJersey = useCallback(() => {}, []);
+
+  const addJersey = useCallback(() => {
+    updateJerseys([
+      { ...formData, id: uuidv4(), type: JerseyType.HOME, imageUrl: '' },
+    ]);
+  }, [formData, updateJerseys]);
+
+  const handleSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      if (isEditMode) {
+        editJersey();
+      } else {
+        addJersey();
+      }
+    },
+    [addJersey, editJersey, isEditMode]
+  );
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -58,7 +78,13 @@ export function JerseyForm({
           required
         />
       </div>
-      <Button type="submit">{initialData ? 'Update' : 'Add'} Jersey</Button>
+      <Button type="submit" disabled={isPending}>
+        {isPending
+          ? 'Loading...'
+          : initialData
+            ? 'Update Jersey'
+            : 'Add Jersey'}
+      </Button>
     </form>
   );
 }
