@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -11,44 +11,33 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { createLazyFileRoute, useNavigate } from '@tanstack/react-router';
-import { supabase } from '@/db/supabase';
+import { useSessionContext } from '@/contexts/SessionContext';
+import useSupabase from '@/hooks/useSupabase';
 
 export const Route = createLazyFileRoute('/login')({
   component: LoginPage,
 });
 
 export default function LoginPage() {
-  const [user, setUser] = useState<any>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null);
-      }
-    );
-
-    return () => {
-      if (authListener && authListener.subscription) {
-        authListener.subscription.unsubscribe();
-      }
-    };
-  }, []);
+  const { session } = useSessionContext();
+  const client = useSupabase();
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error } = await client.auth.signInWithPassword({
         email,
         password,
       });
       if (error) throw error;
-    } catch (error: any) {
+    } catch (error) {
       setError(error.message);
     } finally {
       setLoading(false);
@@ -59,7 +48,7 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { error } = await client.auth.signInWithOAuth({
         provider: 'google',
       });
       if (error) throw error;
@@ -72,7 +61,7 @@ export default function LoginPage() {
 
   const navigate = useNavigate({ from: '/login' });
 
-  if (user) {
+  if (session) {
     navigate({
       to: '/',
     });

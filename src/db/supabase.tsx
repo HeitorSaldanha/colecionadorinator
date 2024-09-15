@@ -1,7 +1,21 @@
-import { createClient } from '@supabase/supabase-js';
+import { Database } from '@/model/supabase';
+import { createBrowserClient } from '@supabase/ssr';
+import invariant from 'tiny-invariant';
 
-// Initialize Supabase client
-export const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_API_KEY
-);
+let client: ReturnType<typeof createBrowserClient<Database>> | undefined;
+
+export function getSupabaseBrowserClient() {
+  if (client) {
+    return client;
+  }
+
+  const { VITE_SUPABASE_URL, VITE_SUPABASE_API_KEY } = import.meta.env;
+
+  invariant(VITE_SUPABASE_URL, `Supabase URL was not provided`);
+  invariant(VITE_SUPABASE_API_KEY, `Supabase Anon key was not provided`);
+
+  return createBrowserClient<Database>(
+    VITE_SUPABASE_URL,
+    VITE_SUPABASE_API_KEY
+  );
+}

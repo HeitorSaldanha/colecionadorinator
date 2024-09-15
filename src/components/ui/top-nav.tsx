@@ -1,3 +1,4 @@
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -95,7 +96,12 @@ export function TopNav() {
       <div className="flex space-x-2">
         {session ? (
           <DropdownMenu>
-            <DropdownMenuTrigger>Open</DropdownMenuTrigger>
+            <DropdownMenuTrigger>
+              <Avatar>
+                <AvatarImage src="https://github.com/shadcn.png" />
+                <AvatarFallback>CN</AvatarFallback>
+              </Avatar>
+            </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuLabel>{session.user.email}</DropdownMenuLabel>
               <DropdownMenuSeparator />

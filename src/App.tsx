@@ -1,5 +1,5 @@
-import { PropsWithChildren, useState } from 'react';
-import { Ijersey, JerseyType } from './model/jersey';
+import { PropsWithChildren, StrictMode, useMemo, useState } from 'react';
+import { Ijersey } from './model/jersey';
 import { IFilters } from './model/filters';
 import {
   emptyFilters,
@@ -7,42 +7,37 @@ import {
 } from './contexts/FiltersContext';
 import { JerseysViewContextProvider } from './contexts/JerseysViewContext';
 import { ViewMode } from './model/ui';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import useSupabase from './hooks/useSupabase';
+import { routeTree } from './routeTree.gen';
+import { RouterProvider, createRouter } from '@tanstack/react-router';
 
-export default function JerseyDashboard({ children }: PropsWithChildren) {
-  const [jerseys, setJerseys] = useState<Ijersey[]>([
-    {
-      id: 1,
-      team: 'Manchester United',
-      number: '7',
-      type: JerseyType.HOME,
-      player: 'Cristiano Ronaldo',
-      season: '2008',
-      imageUrl: 'https://placehold.co/300x300',
-    },
-    {
-      id: 2,
-      team: 'Barcelona',
-      number: '10',
-      player: 'Lionel Messi',
-      type: JerseyType.HOME,
-      season: '2015',
-      imageUrl: 'https://placehold.co/300x300',
-    },
-    {
-      id: 3,
-      team: 'Real Madrid',
-      number: '9',
-      player: 'Ronaldo',
-      type: JerseyType.HOME,
-      season: '2002',
-      imageUrl: 'https://placehold.co/300x300',
-    },
-  ]);
+const router = createRouter({ routeTree, context: { dbClient: undefined! } });
+
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: typeof router;
+  }
+}
+
+export function App() {
+  const dbClient = useSupabase();
+  return (
+    <StrictMode>
+      <RouterProvider router={router} context={{ dbClient }} />
+    </StrictMode>
+  );
+}
+
+export default function AppProviders({ children }: PropsWithChildren) {
+  const [jerseys, setJerseys] = useState<Ijersey[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedJersey, setSelectedJersey] = useState<Ijersey | null>(null);
   const [viewMode, setViewMode] = useState(ViewMode.GRID);
   const [filters, setFilters] = useState<IFilters>(emptyFilters);
+
+  const queryClient = useMemo(() => new QueryClient(), []);
 
   const editJersey = (jersey: Ijersey) => {
     setJerseys(jerseys.map((j) => (j.id === jersey.id ? jersey : j)));
@@ -60,7 +55,7 @@ export default function JerseyDashboard({ children }: PropsWithChildren) {
   };
 
   return (
-    <div className="container mx-auto p-4">
+    <QueryClientProvider client={queryClient}>
       <JerseysViewContextProvider
         value={{
           jerseys,
@@ -81,7 +76,7 @@ export default function JerseyDashboard({ children }: PropsWithChildren) {
           {children}
         </FiltersContextProvider>
       </JerseysViewContextProvider>
-    </div>
+    </QueryClientProvider>
   );
 }
 

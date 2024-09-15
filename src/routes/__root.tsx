@@ -1,10 +1,14 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { createRootRoute, Outlet, useMatchRoute } from '@tanstack/react-router';
+import {
+  createRootRouteWithContext,
+  Outlet,
+  useMatchRoute,
+} from '@tanstack/react-router';
 import { TopNav } from '@/components/ui/top-nav';
-import JerseyDashboard from '@/App';
-import { supabase } from '@/db/supabase';
+import AppProviders from '@/App';
 import { Session } from '@supabase/supabase-js';
 import { SessionContextProvider } from '@/contexts/SessionContext';
+import useSupabase from '@/hooks/useSupabase';
 
 const TanStackRouterDevtools =
   process.env.NODE_ENV === 'production'
@@ -18,26 +22,31 @@ const TanStackRouterDevtools =
         }))
       );
 
-export const Route = createRootRoute({
+interface IRouterContext {
+  dbClient: ReturnType<typeof useSupabase>;
+}
+
+export const Route = createRootRouteWithContext<IRouterContext>()({
   component: Root,
 });
 
 function Root() {
   const [session, setSession] = useState<Session | null>(null);
+  const client = useSupabase();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    client.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
     });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = client.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [client.auth]);
 
   const matchRoute = useMatchRoute();
 
@@ -48,17 +57,19 @@ function Root() {
       value={{
         session,
         setSession,
-        signOut: async () => await supabase.auth.signOut(),
+        signOut: async () => await client.auth.signOut(),
       }}
     >
       {matchedLoginRoute ? (
-        <Outlet />
+        <AppProviders>
+          <Outlet />
+        </AppProviders>
       ) : (
         <div className="container mx-auto p-4">
-          <JerseyDashboard>
+          <AppProviders>
             <TopNav />
             <Outlet />
-          </JerseyDashboard>
+          </AppProviders>
           <Suspense>
             <TanStackRouterDevtools />
           </Suspense>
